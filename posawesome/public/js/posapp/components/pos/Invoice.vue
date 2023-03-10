@@ -24,14 +24,14 @@
     >
       <v-row align="center" class="items px-2 py-1">
         <v-col
-          v-if="pos_profile.posa_allow_sales_order"
+          v-if="pos_profile.posa_allow_sales_order || pos_profile.pickup_slot"
           cols="9"
           class="pb-2 pr-0"
         >
           <Customer></Customer>
         </v-col>
         <v-col
-          v-if="!pos_profile.posa_allow_sales_order"
+          v-else
           cols="12"
           class="pb-2"
         >
@@ -49,6 +49,16 @@
             v-model="invoiceType"
             :disabled="invoiceType == 'Return'"
           ></v-select>
+        </v-col>
+        <v-col v-if="pos_profile.pickup_slot" cols="3" class="pb-2">
+          <v-btn
+            block
+            class="pa-0"
+            color="accent"
+            dark
+            @click="get_items_from_sales_order"
+            >{{ __('Get Orders') }}</v-btn
+          >
         </v-col>
       </v-row>
 
@@ -2476,6 +2486,27 @@ export default {
         this.delivery_charges_rate = 0;
       }
     },
+    get_items_from_sales_order() {
+      const vm = this;
+      if (this.customer && this.pos_profile.pickup_slot) {
+        frappe.call({
+          method: 'pickup.pickup.doctype.pickup_slot.pickup_slot.get_items_from_sales_order',
+          args: {
+            customer: this.customer,
+            pickup_slot: this.pos_profile.pickup_slot
+          },
+          callback: function (r) {
+            if (r.message) {
+              vm.items = r.message;
+              vm.update_items_details(vm.items);
+              vm.items.forEach((item) => {
+                item.posa_row_id = vm.makeid(20);
+              });
+            }
+          }
+        })
+      }
+    }
   },
 
   created() {
