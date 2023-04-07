@@ -287,6 +287,19 @@
               :prefix="invoice_doc.currency"
             ></v-text-field>
           </v-col>
+          <v-col cols="6">
+            <v-text-field
+              dense
+              outlined
+              color="primary"
+              :label="frappe._('Balance Amount')"
+              background-color="white"
+              hide-details
+              :value="formtCurrency(invoice_doc.balance_amount)"
+              disabled
+              :prefix="invoice_doc.currency"
+            ></v-text-field>
+          </v-col>
           <v-col
             cols="6"
             v-if="pos_profile.posa_allow_sales_order && invoiceType == 'Order'"
@@ -831,7 +844,7 @@ export default {
     },
     set_full_amount(idx) {
       this.invoice_doc.payments.forEach((payment) => {
-        payment.amount = payment.idx == idx ? this.invoice_doc.grand_total : 0;
+        payment.amount = payment.idx == idx ? (this.invoice_doc.grand_total + this.invoice_doc.balance_amount).toFixed(this.currency_precision) : 0;
       });
     },
     set_rest_amount(idx) {
@@ -1172,7 +1185,7 @@ export default {
     },
     diff_payment() {
       let diff_payment = (
-        this.invoice_doc.grand_total - this.total_payments
+        this.invoice_doc.grand_total + this.invoice_doc.balance_amount - this.total_payments
       ).toFixed(this.currency_precision);
       this.paid_change = -diff_payment;
       return diff_payment;
@@ -1254,7 +1267,7 @@ export default {
         this.is_credit_sale = 0;
         this.is_write_off_change = 0;
         if (default_payment) {
-          default_payment.amount = invoice_doc.grand_total.toFixed(
+          default_payment.amount = (invoice_doc.grand_total + invoice_doc.balance_amount).toFixed(
             this.currency_precision
           );
         }
